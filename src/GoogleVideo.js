@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 
-class FacebookVideo extends Component {
+class GoogleVideo extends Component {
   constructor(props) {
     super(props)
 
@@ -8,17 +8,17 @@ class FacebookVideo extends Component {
   }
 
   _passVideoId() {
-    let videoId = this.props.video.id
-    this.props.setVideoId(videoId)
+    // let videoId = this.props.video.id
+    // this.props.setVideoId(videoId)
   }
 
   render() {
     return (
       <div>
         <ul onClick={this._passVideoId}>
-          <img src={require('./photos/facebookvideoplaceholder.jpg')} role='presentation' />
+          <img src={this.object.attatchments[0].image.url} role='presentation' />
           <li>
-            {this.props.video.description}
+            {this._convertDate()}
           </li>
         </ul>
       </div>
@@ -26,4 +26,4 @@ class FacebookVideo extends Component {
   }
 }
 
-export default FacebookVideo;
+export default GoogleVideo;

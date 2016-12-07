@@ -10,6 +10,8 @@ import YoutubePlayer from './YoutubePlayer';
 import Facebook from './Facebook';
 import FacebookVideo from './FacebookVideo';
 
+import GoogleVideo from './GoogleVideo';
+
 
 class Home extends Component {
   constructor(props) {
@@ -19,6 +21,8 @@ class Home extends Component {
       showYoutube: true,
       showFacebook: false,
       channelUsername: '',
+      currentChannel: {},
+      currentGooglePlusId: '',
       currentFacebookUsername: '',
       channelTitle: '',
       channelDescription: '',
@@ -27,8 +31,8 @@ class Home extends Component {
       videoId: 't-_RyF4UBlc',
       videos: [],
       fbVideos: [],
-      fbVideoId: '1543731352308887',
-      currentChannel: {}
+      googleVideos: [],
+      fbVideoId: '1543731352308887'
     }
     this._showNavBar = this._showNavBar.bind(this);
 
@@ -46,6 +50,10 @@ class Home extends Component {
     this._facebookUserSearch = this._facebookUserSearch.bind(this);
     this._listFbVideos = this._listFbVideos.bind(this);
     this._setFbVideoId = this._setFbVideoId.bind(this);
+
+    this._googlePlusIdSearch = this._googlePlusIdSearch.bind(this);
+    this._listFbVideos = this._listFbVideos.bind(this);
+
   }
 
   _setChannelUsername() {
@@ -103,9 +111,11 @@ class Home extends Component {
     .then((response) => {
       let currentChannel = response.data
       let currentFacebookUsername = currentChannel.facebookUsername
+      let currentGooglePlusId = currentChannel.googlePlusId
       this.setState({
+        currentChannel,
         currentFacebookUsername,
-        currentChannel
+        currentGooglePlusId
       })
     })
   }
@@ -177,7 +187,24 @@ class Home extends Component {
 
   _setFbVideoId(fbVideoId) {
     this.setState({fbVideoId})
-    console.log(this.state.fbVideoId);
+  }
+
+  _googlePlusIdSearch() {
+    console.log(this.state.currentGooglePlusId);
+    axios.get(`https://www.googleapis.com/plus/v1/people/${this.state.currentGooglePlusId}/activities/public?key=AIzaSyBaRBabLBTB8Mz-jzvgzJkAssDGkdaVPzc`)
+    .then((response) => {
+      let googleVideos = response.data.items
+      this.setState({googleVideos})
+      this._listGoogleVideos()
+    })
+  }
+
+  _listGoogleVideos() {
+    let videoInfo = this.state.googleVideos
+    console.log(videoInfo);
+    return videoInfo.map((video, index) => {
+      return <YoutubeVideo googleVideo={video} key={index} setVideoId={this._setVideoId}/>
+    })
   }
 
 
@@ -229,6 +256,7 @@ class Home extends Component {
         <div className='navBar'>
           <ul>
             <li><Link to='/home' onClick={this._showYoutube}>Youtube Videos</Link></li>
+            <li onClick={this._googlePlusIdSearch}>googleplus</li>
             {this._showNavBar()}
           </ul>
         </div>
