@@ -190,7 +190,6 @@ class Home extends Component {
   }
 
   _googlePlusIdSearch() {
-    console.log(this.state.currentGooglePlusId);
     axios.get(`https://www.googleapis.com/plus/v1/people/${this.state.currentGooglePlusId}/activities/public?key=AIzaSyBaRBabLBTB8Mz-jzvgzJkAssDGkdaVPzc`)
     .then((response) => {
       let googleVideos = response.data.items
@@ -201,9 +200,10 @@ class Home extends Component {
 
   _listGoogleVideos() {
     let videoInfo = this.state.googleVideos
-    console.log(videoInfo);
+    // console.log(videoInfo);
+
     return videoInfo.map((video, index) => {
-      return <YoutubeVideo googleVideo={video} key={index} setVideoId={this._setVideoId}/>
+      return <GoogleVideo video={video} key={index} setVideoId={this._setVideoId}/>
     })
   }
 
@@ -263,6 +263,7 @@ class Home extends Component {
         <div className='videoLists'>
           {this._listVideos()}
           {this._listFbVideos()}
+          {this._listGoogleVideos()}
         </div>
 
       </div>
