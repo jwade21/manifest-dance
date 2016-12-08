@@ -20,6 +20,8 @@ class Home extends Component {
     this.state = {
       showYoutube: true,
       showFacebook: false,
+      showGoogle: false,
+      error: '',
       channelUsername: '',
       currentChannel: {},
       currentGooglePlusId: '',
@@ -34,11 +36,15 @@ class Home extends Component {
       googleVideos: [],
       fbVideoId: '1543731352308887'
     }
-    this._showNavBar = this._showNavBar.bind(this);
 
-    this._showYoutube = this._showYoutube.bind(this);
     this._setChannelUsername = this._setChannelUsername.bind(this);
     this._handleSubmit = this._handleSubmit.bind(this);
+
+    this._showFbButton = this._showFbButton.bind(this);
+    this._showFbButton = this._showFbButton.bind(this);
+    this._showGooglebutton = this._showGooglebutton.bind(this);
+
+    this._showYoutube = this._showYoutube.bind(this);
     this._usernameSearch = this._usernameSearch.bind(this);
     this._channelIdSearch = this._channelIdSearch.bind(this);
     this._listVideos = this._listVideos.bind(this);
@@ -64,12 +70,18 @@ class Home extends Component {
 
   _handleSubmit(e) {
     e.preventDefault()
+    window.location = '#/home'
     this._usernameSearch()
   }
 
+
+
   _usernameSearch() {
     this.setState({
-      showFacebook: false
+      showYoutube: true,
+      showFacebook: false,
+      showGoogle: false,
+      error: ''
     })
     axios.get(`https://www.googleapis.com/youtube/v3/channels?part=snippet,brandingSettings&forUsername=${this.state.channelUsername}&key=AIzaSyB8QlXehMo3zEy9L8l9ECHRAcqNFsq-l4c`)
     .then((response) => {
@@ -87,6 +99,11 @@ class Home extends Component {
        })
       let channelId = channel.id
       this._channelIdSearch(channelId)
+    })
+    .catch((err) => {
+      this.setState({
+        error: 'Please make sure you spelled the channel correctly.'
+      })
     })
   }
 
@@ -117,12 +134,21 @@ class Home extends Component {
         currentFacebookUsername,
         currentGooglePlusId
       })
+      this.refs.channelUsername.value = ''
     })
   }
 
-  _showNavBar() {
+  _showFbButton() {
     if (this.state.currentChannel.facebookUsername) {
       return <li><Link to='/facebook' onClick={this._showFacebook}>Facebook Videos</Link></li>
+    } else {
+      return null
+    }
+  }
+
+  _showGooglebutton() {
+    if (this.state.currentChannel.googlePlusId) {
+      return <li><Link to='/googleplus' onClick={this._googlePlusIdSearch}>Google Plus Videos</Link></li>
     } else {
       return null
     }
@@ -151,7 +177,8 @@ class Home extends Component {
   _showFacebook() {
     this.setState({
       showYoutube: false,
-      showFacebook: true
+      showFacebook: true,
+      showGoogle: false,
     })
     axios.get(`https://graph.facebook.com/v2.8/https://www.facebook.com/${this.state.currentFacebookUsername}/?access_token=301081820285465|kaTKm8fd78pevsbeo6fTNQWNoWw`)
     .then((response) => {
@@ -167,7 +194,6 @@ class Home extends Component {
     .then((response) => {
       let fbVideos = response.data.data
       let firstFbVideoId = fbVideos[0].id
-      console.log(firstFbVideoId);
       this.setState({
         fbVideos,
         fbVideoId: firstFbVideoId
@@ -190,30 +216,54 @@ class Home extends Component {
   }
 
   _googlePlusIdSearch() {
+    this.setState({
+      showYoutube: false,
+      showFacebook: false,
+      showGoogle: true
+    })
     axios.get(`https://www.googleapis.com/plus/v1/people/${this.state.currentGooglePlusId}/activities/public?key=AIzaSyBaRBabLBTB8Mz-jzvgzJkAssDGkdaVPzc`)
     .then((response) => {
       let googleVideos = response.data.items
-      this.setState({googleVideos})
+      var sortVideosList = []
+      for (var i = 0; i < googleVideos.length; i++) {
+        if (googleVideos[i].object.attachments[0].embed) {
+          sortVideosList.push(googleVideos[i])
+        }
+      }
+      let firstGoogleIdUrl = sortVideosList[0].object.attachments[0].url
+      let firstGoogleVideoId
+      if (firstGoogleIdUrl.includes('&feature')) {
+        firstGoogleVideoId = firstGoogleIdUrl.split('?v=')[1].split('&')[0]
+      } else {
+        firstGoogleVideoId = firstGoogleIdUrl.split('?v=')[1]
+      }
+
+      this.setState({
+        googleVideos: sortVideosList,
+        videoId: firstGoogleVideoId
+      })
       this._listGoogleVideos()
     })
   }
 
   _listGoogleVideos() {
     let videoInfo = this.state.googleVideos
-    // console.log(videoInfo);
-
     return videoInfo.map((video, index) => {
+    if (!video.object.attachments[0].embed) {
+      return null
+    } else {
       return <GoogleVideo video={video} key={index} setVideoId={this._setVideoId}/>
+    }
     })
   }
 
 
   componentWillMount() {
-    if(location.hash === '#/home') {
+    if (location.hash === '#/facebook') {
+      return <Facebook id={this.state.fbVideoId} />
+    } else {
       this._listVideos()
       return <YoutubePlayer videoId={this.state.videoId} />
-    } else if (location.hash === '#/facebook') {
-      return <Facebook id={this.state.fbVideoId} />
     }
   }
 
@@ -225,7 +275,8 @@ class Home extends Component {
       channelDescription={this.state.channelDescription}
       channelImage={this.state.channelImage}
       channelBanner={this.state.channelBanner}
-      facebook={this.state.currentFacebookUsername}/>
+      facebook={this.state.currentFacebookUsername}
+      googlePlus={this.state.currentGooglePlusId}/>
     }
 
     return (
@@ -238,34 +289,40 @@ class Home extends Component {
         </div>
 
         <div className='searchContainer'>
-          <form>
-            <input
-            type='text'
-            ref='channelUsername'
-            onChange={this._setChannelUsername}
-            onSubmit={this._handleSubmit}/>
-            <input
-            type='submit'
-            onClick={this._handleSubmit} />
-          </form>
           <div>
+            <form>
+              <input
+              type='text'
+              ref='channelUsername'
+              placeholder='Search by Youtube Channel Name'
+              onChange={this._setChannelUsername}
+              onSubmit={this._handleSubmit}/>
+              <input
+              type='submit'
+              onClick={this._handleSubmit} />
+            </form>
+            <div>
+              {this.state.error}
+            </div>
+          </div>
+          <div className='videoPlayer'>
             {this.componentWillMount()}
           </div>
-      </div>
-
-        <div className='navBar'>
-          <ul>
-            <li><Link to='/home' onClick={this._showYoutube}>Youtube Videos</Link></li>
-            <li onClick={this._googlePlusIdSearch}>googleplus</li>
-            {this._showNavBar()}
-          </ul>
         </div>
-        <div className='videoLists'>
-          {this._listVideos()}
-          {this._listFbVideos()}
-          {this._listGoogleVideos()}
+        <div className='bottomContainer'>
+          <div className='navBar'>
+            <ul>
+              <li><Link to='/home' onClick={this._showYoutube}>Youtube Videos</Link></li>
+              {this._showFbButton()}
+              {this._showGooglebutton()}
+            </ul>
+          </div>
+          <div className='videoLists'>
+            {this._listVideos()}
+            {this._listFbVideos()}
+            {this._listGoogleVideos()}
+          </div>
         </div>
-
       </div>
     );
   }
