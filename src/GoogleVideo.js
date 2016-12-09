@@ -9,6 +9,7 @@ class GoogleVideo extends Component {
   }
 
   _convertDate() {
+    //CHANGE PUBLISHED DATE TO A READABLE DATE
     let dateArr = []
     let published = new Date(this.props.video.published)
     let dateSplit = published.toString().split(' ')
@@ -20,6 +21,8 @@ class GoogleVideo extends Component {
   }
 
   _passVideoId() {
+    //PASS CLICKED VIDEO'S ID TO PLAYERS THROUGH HOME
+    //GET VIDEO ID FROM THE YOUTUBE LINK URL
     let idUrl = this.props.video.object.attachments[0].embed.url
     let videoId = idUrl.split('/v/')[1].split('?')[0]
     this.props.setVideoId(videoId)
@@ -27,17 +30,16 @@ class GoogleVideo extends Component {
 
   render() {
     return (
-      <div>
+      <div className='googleVideo video'>
         <ul onClick={this._passVideoId}>
           <img src={this.props.video.object.attachments[0].image.url} role='presentation' />
-          <li>
-
+        </ul>
+        <ul className='videoInfo'>
+          <li className='videoTitle'>
+            {this.props.video.object.attachments[0].displayName}
           </li>
           <li>
-
-          </li>
-          <li>
-          {/* {this._convertDate()} */}
+            {this._convertDate()}
           </li>
         </ul>
       </div>

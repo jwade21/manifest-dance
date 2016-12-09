@@ -8,15 +8,16 @@ class FacebookVideo extends Component {
   }
 
   _passVideoId() {
+    //PASS CLICKED VIDEO'S ID TO PLAYERS THROUGH HOME
     let videoId = this.props.video.id
     this.props.setVideoId(videoId)
   }
 
   render() {
     return (
-      <div>
-        <ul onClick={this._passVideoId}>
-          <img src={require('./photos/facebookvideoplaceholder.jpg')} role='presentation' />
+      <div className='facebookVideo video' onClick={this._passVideoId}>
+        <img src={require('./photos/facebookvideoplaceholder.jpg')} role='presentation' />
+        <ul>
           <li>
             {this.props.video.description}
           </li>

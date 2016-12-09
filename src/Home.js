@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import {Link} from 'react-router';
+import {IndexLink, Link} from 'react-router';
 import axios from 'axios';
 import './App.css';
 
@@ -7,7 +7,7 @@ import YoutubeVideo from './YoutubeVideo';
 import YoutubeChannel from './YoutubeChannel';
 import YoutubePlayer from './YoutubePlayer';
 
-import Facebook from './Facebook';
+import Facebook from './FacebookPlayer';
 import FacebookVideo from './FacebookVideo';
 
 import GoogleVideo from './GoogleVideo';
@@ -22,27 +22,30 @@ class Home extends Component {
       showFacebook: false,
       showGoogle: false,
       error: '',
+      errCount: 0,
       channelUsername: '',
-      currentChannel: {},
-      currentGooglePlusId: '',
-      currentFacebookUsername: '',
       channelTitle: '',
+      channelSubscribers: '',
+      channelVideoCount: '',
+      channelViewCount: '',
       channelDescription: '',
       channelImage: '',
       channelBanner: '',
-      videoId: 't-_RyF4UBlc',
+      currentChannel: {},
+      currentGooglePlusId: '',
+      currentFacebookUsername: '',
+      videoId: 'Mtjatz9r-Vc',
       videos: [],
       fbVideos: [],
       googleVideos: [],
-      fbVideoId: '1543731352308887'
+      fbVideoId: '10154982214184769'
     }
 
     this._setChannelUsername = this._setChannelUsername.bind(this);
     this._handleSubmit = this._handleSubmit.bind(this);
 
     this._showFbButton = this._showFbButton.bind(this);
-    this._showFbButton = this._showFbButton.bind(this);
-    this._showGooglebutton = this._showGooglebutton.bind(this);
+    this._showGoogleButton = this._showGoogleButton.bind(this);
 
     this._showYoutube = this._showYoutube.bind(this);
     this._usernameSearch = this._usernameSearch.bind(this);
@@ -62,6 +65,17 @@ class Home extends Component {
 
   }
 
+  componentWillMount() {
+    if (location.hash === '#/facebook') {
+      return <Facebook id={this.state.fbVideoId} />
+    } else {
+      this._listVideos()
+      return <YoutubePlayer videoId={this.state.videoId} />
+    }
+  }
+
+//INITIAL SEARCH ------------------//
+//--------------------------------//
   _setChannelUsername() {
     this.setState({
       channelUsername: this.refs.channelUsername.value
@@ -70,28 +84,44 @@ class Home extends Component {
 
   _handleSubmit(e) {
     e.preventDefault()
-    window.location = '#/home'
+    //SEND USER TO HOME WHEN SEARCHING
+    window.location = '#/'
     this._usernameSearch()
   }
 
-
+  //YOUTUBE ------------------//
+  //------------------------//
+  _showYoutube() {
+    this.setState({
+      showYoutube: true
+    })
+  }
 
   _usernameSearch() {
     this.setState({
       showYoutube: true,
       showFacebook: false,
       showGoogle: false,
-      error: ''
+      error: '',
+      currentChannel: ''
     })
-    axios.get(`https://www.googleapis.com/youtube/v3/channels?part=snippet,brandingSettings&forUsername=${this.state.channelUsername}&key=AIzaSyB8QlXehMo3zEy9L8l9ECHRAcqNFsq-l4c`)
+    //SEARCH BY USERNAME TO FIND CHANNEL ID
+    axios.get(`https://www.googleapis.com/youtube/v3/channels?part=snippet,brandingSettings,statistics&forUsername=${this.state.channelUsername}&key=AIzaSyB8QlXehMo3zEy9L8l9ECHRAcqNFsq-l4c`)
     .then((response) => {
+      //SET CHANNEL BANNER INFORMATION
       let channel = response.data.items[0]
+      let channelSubscribers = channel.statistics.subscriberCount
+      let channelVideoCount = channel.statistics.videoCount
+      let channelViewCount = channel.statistics.viewCount
       let channelTitle = channel.brandingSettings.channel.title
       let channelDescription = channel.brandingSettings.channel.description
-      let channelImage = channel.snippet.thumbnails.default.url
+      let channelImage = channel.snippet.thumbnails.medium.url
       let channelBanner = channel.brandingSettings.image.bannerImageUrl
 
        this.setState({
+         channelSubscribers,
+         channelVideoCount,
+         channelViewCount,
          channelTitle,
          channelDescription,
          channelImage,
@@ -101,14 +131,25 @@ class Home extends Component {
       this._channelIdSearch(channelId)
     })
     .catch((err) => {
-      this.setState({
-        error: 'Please make sure you spelled the channel correctly.'
-      })
+      //WARN USER WHEN USERNAME IS ENTERED INCORRECTLY
+      if (err) {
+        this.state.errCount++
+      }
+      if (this.state.errCount >= 2) {
+        this.setState({
+          error: 'Try: "cnn", "erb", "whzgud2", "elicomputerguylive".'
+        })
+      } else {
+        this.setState({
+          error: 'Please make sure you spelled the channel correctly.'
+        })
+      }
     })
   }
 
 
   _channelIdSearch(channelId) {
+    //SEARCH BY CHANNEL ID TO FIND VIDEOS
     axios.get(`https://www.googleapis.com/youtube/v3/search?channelId=${channelId}&part=snippet&type=video&videoEmbeddable=true&order=date&maxResults=50&key=AIzaSyB8QlXehMo3zEy9L8l9ECHRAcqNFsq-l4c`)
     .then((response) => {
       let videos = response.data.items
@@ -122,10 +163,26 @@ class Home extends Component {
     })
   }
 
+  _listVideos() {
+
+    let videoInfo = this.state.videos;
+    if (this.state.showYoutube) {
+      //ONLY RUN IF YOUTUBE LIST IS SHOWING
+      return videoInfo.map((video, index) => {
+        return <YoutubeVideo key={index} video={video} setVideoId={this._setVideoId} />
+      })
+    }
+  }
+
+  //GET SOCIAL LINKS OF CHANNEL FROM DATABASE//
+  //----------------------------------------//
+
   _fetchSocialLinks() {
+    //MAKE SURE THE SEARCH USERNAME IS NOT CASE SENSITIVE
     let searchUsername = this.state.channelUsername.toLowerCase()
     axios.get(`https://manifest-dance-backend.herokuapp.com/${searchUsername}`)
     .then((response) => {
+      //SET STATE ID'S FOR OTHER SEARCHES
       let currentChannel = response.data
       let currentFacebookUsername = currentChannel.facebookUsername
       let currentGooglePlusId = currentChannel.googlePlusId
@@ -138,60 +195,31 @@ class Home extends Component {
     })
   }
 
-  _showFbButton() {
-    if (this.state.currentChannel.facebookUsername) {
-      return <li><Link to='/facebook' onClick={this._showFacebook}>Facebook Videos</Link></li>
-    } else {
-      return null
-    }
-  }
-
-  _showGooglebutton() {
-    if (this.state.currentChannel.googlePlusId) {
-      return <li><Link to='/googleplus' onClick={this._googlePlusIdSearch}>Google Plus Videos</Link></li>
-    } else {
-      return null
-    }
-  }
-
-
-  _listVideos() {
-    let videoInfo = this.state.videos;
-    if (this.state.showYoutube) {
-      return videoInfo.map((video, index) => {
-        return <YoutubeVideo key={index} video={video} setVideoId={this._setVideoId} />
-      })
-    }
-  }
-
-  _setVideoId(videoId) {
-    this.setState({videoId})
-  }
-
-  _showYoutube() {
-    this.setState({
-      showYoutube: true
-    })
-  }
+  //FACEBOOK ------------------//
+  //------------------------//
 
   _showFacebook() {
+    //SHOW THE FACEBOOK LIST
     this.setState({
       showYoutube: false,
       showFacebook: true,
       showGoogle: false,
     })
+
+    //SEARCH BY FACEBOOK USERNAME AQUIRED FROM DATABASE
     axios.get(`https://graph.facebook.com/v2.8/https://www.facebook.com/${this.state.currentFacebookUsername}/?access_token=301081820285465|kaTKm8fd78pevsbeo6fTNQWNoWw`)
     .then((response) => {
+      //SET FACEBOOK USER ID
       let userId = response.data.id
       this._facebookUserSearch(userId)
     })
   }
 
-
-
   _facebookUserSearch(userId) {
+    //SEARCH BY FACEBOOK USER ID
     axios.get(`https://graph.facebook.com/v2.8/${userId}/videos/?access_token=301081820285465|kaTKm8fd78pevsbeo6fTNQWNoWw`)
     .then((response) => {
+      //SET FACEBOOK VIDEOS
       let fbVideos = response.data.data
       let firstFbVideoId = fbVideos[0].id
       this.setState({
@@ -202,18 +230,23 @@ class Home extends Component {
     })
   }
 
+
+
   _listFbVideos() {
     let videoInfo = this.state.fbVideos
+    //ONLY RUN IF FACEBOOK LIST IS SHOWING
     if (this.state.showFacebook) {
       return videoInfo.map((video, index) => {
         return <FacebookVideo video={video} key={index} setVideoId={this._setFbVideoId}/>
       })
     }
   }
-
   _setFbVideoId(fbVideoId) {
     this.setState({fbVideoId})
   }
+
+  //GOOGLE ------------------//
+  //------------------------//
 
   _googlePlusIdSearch() {
     this.setState({
@@ -221,15 +254,18 @@ class Home extends Component {
       showFacebook: false,
       showGoogle: true
     })
+    //SEARCH BY GOOGLEPLUS ID AQUIRED FROM THE DATABASE
     axios.get(`https://www.googleapis.com/plus/v1/people/${this.state.currentGooglePlusId}/activities/public?key=AIzaSyBaRBabLBTB8Mz-jzvgzJkAssDGkdaVPzc`)
     .then((response) => {
       let googleVideos = response.data.items
       var sortVideosList = []
+      //IF THE POST IS NOT A VIDEO, DO NOT SAVE IT
       for (var i = 0; i < googleVideos.length; i++) {
         if (googleVideos[i].object.attachments[0].embed) {
           sortVideosList.push(googleVideos[i])
         }
       }
+      //FIND THE ID OF THE FIRST VIDEO TO PLAY IT ON LOAD
       let firstGoogleIdUrl = sortVideosList[0].object.attachments[0].url
       let firstGoogleVideoId
       if (firstGoogleIdUrl.includes('&feature')) {
@@ -248,22 +284,39 @@ class Home extends Component {
 
   _listGoogleVideos() {
     let videoInfo = this.state.googleVideos
-    return videoInfo.map((video, index) => {
-    if (!video.object.attachments[0].embed) {
-      return null
-    } else {
-      return <GoogleVideo video={video} key={index} setVideoId={this._setVideoId}/>
+    //ONLY RUN IF GOOGLE LIST IS SHOWING
+    if (this.state.showGoogle) {
+      return videoInfo.map((video, index) => {
+        return <GoogleVideo video={video} key={index} setVideoId={this._setVideoId}/>
+      })
     }
-    })
   }
 
+  //YOUTUBE AND GOOGLE ------//
+  //------------------------//
 
-  componentWillMount() {
-    if (location.hash === '#/facebook') {
-      return <Facebook id={this.state.fbVideoId} />
+  _setVideoId(videoId) {
+    this.setState({videoId})
+  }
+
+  //NAV BAR------//
+  //-------------//
+
+  _showFbButton() {
+    //IF USER HAS A FACEBOOK USERNAME, SHOW THE FACEBOOK NAV LINK
+    if (this.state.currentChannel.facebookUsername) {
+      return <li><Link to='/facebook' activeClassName='active' onClick={this._showFacebook}>Facebook Videos</Link></li>
     } else {
-      this._listVideos()
-      return <YoutubePlayer videoId={this.state.videoId} />
+      return null
+    }
+  }
+
+  _showGoogleButton() {
+    //IF USER HAS A GOOGLEPLUS ID, SHOW THE GOOGLE NAV LINK
+    if (this.state.currentChannel.googlePlusId) {
+      return <li><Link to='/googleplus' activeClassName='active'  onClick={this._googlePlusIdSearch}>Google Plus Videos</Link></li>
+    } else {
+      return null
     }
   }
 
@@ -271,6 +324,9 @@ class Home extends Component {
     var youtubeChannel;
     if(this.state.channelTitle) {
       youtubeChannel = <YoutubeChannel
+      channelSubscribers={this.state.channelSubscribers}
+      channelVideoCount={this.state.channelVideoCount}
+      channelViewCount={this.state.channelViewCount}
       channelTitle={this.state.channelTitle}
       channelDescription={this.state.channelDescription}
       channelImage={this.state.channelImage}
@@ -284,24 +340,27 @@ class Home extends Component {
         <div className='header'>
 
         </div>
-        <div className='youtubeBanner'>
+        <div className='youtubeBannerContainer'>
           {youtubeChannel}
         </div>
 
         <div className='searchContainer'>
           <div>
-            <form>
-              <input
-              type='text'
-              ref='channelUsername'
-              placeholder='Search by Youtube Channel Name'
-              onChange={this._setChannelUsername}
-              onSubmit={this._handleSubmit}/>
-              <input
-              type='submit'
-              onClick={this._handleSubmit} />
-            </form>
             <div>
+              <form className='searchForm'>
+                <input
+                type='text'
+                ref='channelUsername'
+                placeholder='Search by Youtube Channel Name'
+                onChange={this._setChannelUsername}
+                onSubmit={this._handleSubmit}/>
+                <button
+                onClick={this._handleSubmit}>
+                  Search
+                </button>
+              </form>
+            </div>
+            <div className='error'>
               {this.state.error}
             </div>
           </div>
@@ -312,9 +371,9 @@ class Home extends Component {
         <div className='bottomContainer'>
           <div className='navBar'>
             <ul>
-              <li><Link to='/home' onClick={this._showYoutube}>Youtube Videos</Link></li>
+              <li><IndexLink to='/' activeClassName='active' onClick={this._showYoutube}>Youtube Videos</IndexLink></li>
               {this._showFbButton()}
-              {this._showGooglebutton()}
+              {this._showGoogleButton()}
             </ul>
           </div>
           <div className='videoLists'>

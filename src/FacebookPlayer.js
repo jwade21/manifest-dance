@@ -10,6 +10,7 @@ class Facebook extends Component {
         <FacebookPlayer
         appId='301081820285465'
         width={400}
+        height={500}
         allowfullscreen='true'
         videoId={this.props.id} />
       </div>
