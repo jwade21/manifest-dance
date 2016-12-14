@@ -1,6 +1,7 @@
 
 body {
-  background: linear-gradient(to bottom right, black, rgb(55,0,55));
+  background: linear-gradient(to bottom right, black, rgb(66,0,66));
+  background-color: rgb(15,15,15);
   text-align: center;
   color: rgb(100, 100, 100);
 }
@@ -11,7 +12,21 @@ li {
 .home {
   font-family: 'Fira Sans', serif;
   font-size: 20px;
-  color: #ddd
+  color: #ddd;
+}
+
+/*-----APP BANNER------*/
+
+.appBanner {
+  text-align: left;
+  background: linear-gradient(to bottom right, black, rgb(55,0,55));
+  background-color: rgb(44,0,44);
+}
+#manifestSocial {
+  margin: 0px;
+  padding: 10px;
+  font-family: 'Dancing Script', cursive;
+  font-weight: bolder;
 }
 
 /*---CHANNEL BANNER----*/
@@ -94,6 +109,7 @@ li {
   font-size: 14px;
   border-radius: 5px;
   background-color: #aaa;
+  font-family: 'Fira Sans', serif;
 }
 
 .error {
@@ -114,7 +130,7 @@ li {
   text-decoration: underline;
 }
 .navBar a:hover {
-  color: purple;
+  color: red;
 }
 
 /*---VIDEO LISTS ----*/

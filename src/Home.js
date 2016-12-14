@@ -103,7 +103,9 @@ class Home extends Component {
       showFacebook: false,
       showGoogle: false,
       error: '',
-      currentChannel: ''
+      currentChannel: '',
+      currentFacebookUsername: '',
+      currentGooglePlusId: ''
     })
     //SEARCH BY USERNAME TO FIND CHANNEL ID
     axios.get(`https://www.googleapis.com/youtube/v3/channels?part=snippet,brandingSettings,statistics&forUsername=${this.state.channelUsername}&key=AIzaSyB8QlXehMo3zEy9L8l9ECHRAcqNFsq-l4c`)
@@ -337,6 +339,9 @@ class Home extends Component {
 
     return (
       <div className='home'>
+        <div className='appBanner'>
+          <h1 id='manifestSocial'>Manifest Social</h1>
+        </div>
         <div className='header'>
 
         </div>
