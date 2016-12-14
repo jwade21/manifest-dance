@@ -2,7 +2,7 @@
   "name": "manifest-dance",
   "version": "0.1.0",
   "private": true,
-  "homepage": "http://jwade21.github.io/manifest-dance",
+  "homepage": "http://jwade21.github.io/manifest-social",
   "devDependencies": {
     "gh-pages": "^0.12.0",
     "react-scripts": "0.7.0"
