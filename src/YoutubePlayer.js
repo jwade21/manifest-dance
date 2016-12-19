@@ -7,7 +7,7 @@ class YoutubePlayer extends Component {
   render() {
     return (
       <div>
-        <YouTube videoId={this.props.videoId} />
+        <YouTube videoId={this.props.videoId} id='youtubePlayer'/>
       </div>
     );
   }

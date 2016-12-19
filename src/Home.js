@@ -61,7 +61,7 @@ class Home extends Component {
     this._setFbVideoId = this._setFbVideoId.bind(this);
 
     this._googlePlusIdSearch = this._googlePlusIdSearch.bind(this);
-    this._listFbVideos = this._listFbVideos.bind(this);
+    this._listGoogleVideos = this._listGoogleVideos.bind(this);
 
   }
 

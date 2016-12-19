@@ -29,7 +29,7 @@ class YoutubeVideo extends Component {
 
   render() {
     return (
-      <div  className='youtubeVideo video' >
+      <div className='youtubeVideo video' >
         <ul onClick={this._passVideoId}>
           <li>
             <img src={this.props.video.snippet.thumbnails.medium.url} alt='thumbnail'/>
